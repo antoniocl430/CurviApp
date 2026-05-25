@@ -21,8 +21,8 @@ function buildAvoidOptions(opts: RouteOptions) {
 }
 
 function curvinessToOptions(curviness: number) {
-  // ORS green_factor: -0.5 (avoid green) to 3.0 (strongly prefer scenic)
-  const greenFactor = -0.5 + curviness * 3.5
+  // ORS green_factor real range: -0.5 (avoid scenic) to 1.0 (prefer scenic)
+  const greenFactor = -0.5 + curviness * 1.5
   return { green: parseFloat(greenFactor.toFixed(2)) }
 }
 
