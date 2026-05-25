@@ -1,7 +1,8 @@
-import { MapPin, Trash2, Navigation, RotateCcw, Download } from 'lucide-react'
+import { MapPin, Trash2, Navigation, RotateCcw, Download, ExternalLink } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { calculateRoute } from '../../services/ors/routing'
 import { downloadGpx } from '../../services/gpx/export'
+import { openInGoogleMaps } from '../../utils/googleMaps'
 import { Button } from '../ui/Button'
 import { Slider } from '../ui/Slider'
 import { Toggle } from '../ui/Toggle'
@@ -122,6 +123,9 @@ export function RoutePlanner() {
             </Button>
             <Button variant="secondary" size="sm" onClick={() => downloadGpx(currentRoute)}>
               <Download size={14} /> GPX
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => openInGoogleMaps(currentRoute)} title="Abrir en Google Maps">
+              <ExternalLink size={14} />
             </Button>
           </div>
         </section>
