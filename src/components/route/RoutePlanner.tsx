@@ -6,6 +6,7 @@ import { Button } from '../ui/Button'
 import { Slider } from '../ui/Slider'
 import { Toggle } from '../ui/Toggle'
 import { ElevationChart } from './ElevationChart'
+import { WaypointSearch } from './WaypointSearch'
 import { formatDistance, formatDuration, formatElevation } from '../../utils/format'
 
 export function RoutePlanner() {
@@ -43,8 +44,9 @@ export function RoutePlanner() {
         <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
           Puntos de ruta
         </h3>
+        <WaypointSearch />
         {waypoints.length === 0 ? (
-          <p className="text-xs text-white/40 italic">Haz clic en el mapa para añadir puntos</p>
+          <p className="text-xs text-white/40 italic mt-2">Busca un lugar arriba o haz clic en el mapa</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {waypoints.map((wp, i) => (

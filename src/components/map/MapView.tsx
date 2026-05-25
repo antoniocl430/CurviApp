@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Polyline, Marker, Popup, useMapEvents } from 'react-leaflet'
+import { useEffect } from 'react'
+import { MapContainer, TileLayer, Polyline, Marker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useAppStore } from '../../store/useAppStore'
 import { nanoid } from '../../utils/nanoid'
 import type { LatLng } from '../../types'
@@ -26,6 +27,20 @@ function ClickHandler() {
   return null
 }
 
+// Pans to the last added waypoint so the user sees it on the map immediately
+function AutoPan() {
+  const map = useMap()
+  const waypoints = useAppStore((s) => s.waypoints)
+
+  useEffect(() => {
+    if (waypoints.length === 0) return
+    const last = waypoints[waypoints.length - 1]
+    map.setView([last.position.lat, last.position.lng], Math.max(map.getZoom(), 10), { animate: true })
+  }, [waypoints, map])
+
+  return null
+}
+
 export function MapView() {
   const waypoints = useAppStore((s) => s.waypoints)
   const currentRoute = useAppStore((s) => s.currentRoute)
@@ -47,6 +62,7 @@ export function MapView() {
       />
 
       <ClickHandler />
+      <AutoPan />
 
       {waypoints.map((wp, i) => (
         <Marker key={wp.id} position={[wp.position.lat, wp.position.lng]}>
