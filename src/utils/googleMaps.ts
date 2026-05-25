@@ -1,24 +1,36 @@
 import type { Route, LatLng } from '../types'
 
-// Samples up to `max` evenly spaced points from the middle of the geometry
-// (excluding origin and destination, which go as separate params).
-// Google Maps URL API allows max 9 intermediate waypoints.
-function sampleIntermediatePoints(geometry: LatLng[], max = 8): LatLng[] {
+// One anchor point every ~30 km keeps Google Maps on track without over-specifying.
+// Below 30 km: no intermediate points needed (direct is fine).
+// Above 240 km: capped at 8 (Google Maps URL API hard limit).
+//
+// Examples:
+//   15 km  → 0 waypoints   (origin + destination only)
+//   60 km  → 2 waypoints
+//  150 km  → 5 waypoints
+//  300 km  → 8 waypoints  (capped)
+function waypointCount(distanceKm: number): number {
+  return Math.min(8, Math.max(0, Math.floor(distanceKm / 30)))
+}
+
+function sampleIntermediatePoints(geometry: LatLng[], count: number): LatLng[] {
+  if (count === 0) return []
   const interior = geometry.slice(1, -1)
   if (interior.length === 0) return []
-  if (interior.length <= max) return interior
+  if (interior.length <= count) return interior
 
-  const step = (interior.length - 1) / (max - 1)
-  return Array.from({ length: max }, (_, i) => interior[Math.round(i * step)])
+  const step = (interior.length - 1) / (count - 1)
+  return Array.from({ length: count }, (_, i) => interior[Math.round(i * step)])
 }
 
 export function buildGoogleMapsUrl(route: Route): string {
-  const { geometry } = route
+  const { geometry, distanceKm } = route
   if (geometry.length < 2) throw new Error('La ruta no tiene suficientes puntos')
 
   const origin = geometry[0]
   const destination = geometry[geometry.length - 1]
-  const waypoints = sampleIntermediatePoints(geometry)
+  const count = waypointCount(distanceKm)
+  const waypoints = sampleIntermediatePoints(geometry, count)
 
   const params = new URLSearchParams({
     api: '1',
