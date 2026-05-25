@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-orange: #f97316;
+  --color-brand-dark: #1a1a2e;
+  --color-brand-surface: #16213e;
+  --color-brand-muted: #0f3460;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Leaflet overrides */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  font-family: inherit;
+}
