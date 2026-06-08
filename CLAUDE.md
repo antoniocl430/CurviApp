@@ -105,12 +105,13 @@ El store Zustand centraliza todo el estado. Persiste en `localStorage` sólo `sa
 
 ### Cómo funciona la "curvosidad"
 
-ORS acepta un parámetro `green_factor` en el rango `-0.5` (evitar rutas verdes/escénicas) a `3.0` (preferir fuertemente rutas escénicas/paisajísticas).
+ORS acepta un parámetro `green_factor` en el rango `-0.5` (evitar rutas verdes/escénicas) a `1.0` (preferir fuertemente rutas escénicas/paisajísticas). Valores superiores a 1.0 son rechazados por la API.
 
 ```typescript
 // En routing.ts
-function curvinessToOptions(curviness: number) {
-  const greenFactor = -0.5 + curviness * 3.5  // curviness 0→1 mapea a -0.5→3.0
+function curvinessToWeighting(curviness: number, avoidHighways = false) {
+  let greenFactor = -0.5 + curviness * 1.5  // curviness 0→1 mapea a -0.5→1.0
+  if (avoidHighways) greenFactor = Math.max(0.8, greenFactor)
   return { green: greenFactor }
 }
 ```

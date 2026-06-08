@@ -18,6 +18,7 @@ function sampleIntermediatePoints(geometry: LatLng[], count: number): LatLng[] {
   const interior = geometry.slice(1, -1)
   if (interior.length === 0) return []
   if (interior.length <= count) return interior
+  if (count === 1) return [interior[Math.floor(interior.length / 2)]]
 
   const step = (interior.length - 1) / (count - 1)
   return Array.from({ length: count }, (_, i) => interior[Math.round(i * step)])

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, useMapEvents, useMap 
 import { useAppStore } from '../../store/useAppStore'
 import { nanoid } from '../../utils/nanoid'
 import type { LatLng } from '../../types'
+import { POILayer } from './POILayer'
 import 'leaflet/dist/leaflet.css'
 
 import L from 'leaflet'
@@ -13,8 +14,6 @@ function createWaypointIcon(index: number, total: number): L.DivIcon {
   const bg = isStart ? '#22c55e' : isEnd ? '#ef4444' : '#f97316'
   const label = index + 1
 
-  // Classic teardrop pin: rotated square with rounded top-left/right/bottom-right,
-  // pointy bottom-left corner, counter-rotated label inside.
   const html = `
     <div style="
       position:relative;width:30px;height:30px;
@@ -35,12 +34,26 @@ function createWaypointIcon(index: number, total: number): L.DivIcon {
 
   return L.divIcon({
     html,
-    className: '',          // removes leaflet's default white square background
+    className: '',
     iconSize: [30, 30],
-    iconAnchor: [15, 30],   // tip of the pin at the coordinate
+    iconAnchor: [15, 30],
     popupAnchor: [0, -32],
   })
 }
+
+const userLocationIcon = L.divIcon({
+  html: `<div style="
+    width:16px;height:16px;
+    background:#3b82f6;
+    border:3px solid white;
+    border-radius:50%;
+    box-shadow:0 0 0 5px rgba(59,130,246,0.25);
+  "></div>`,
+  className: '',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+  popupAnchor: [0, -12],
+})
 
 function ClickHandler() {
   const addWaypoint = useAppStore((s) => s.addWaypoint)
@@ -52,7 +65,6 @@ function ClickHandler() {
   return null
 }
 
-// Pans to the last added waypoint so the user sees it on the map immediately
 function AutoPan() {
   const map = useMap()
   const waypoints = useAppStore((s) => s.waypoints)
@@ -66,13 +78,28 @@ function AutoPan() {
   return null
 }
 
+function FlyToController() {
+  const map = useMap()
+  const flyTo = useAppStore((s) => s.flyTo)
+  const clearFlyTo = useAppStore((s) => s.clearFlyTo)
+
+  useEffect(() => {
+    if (!flyTo) return
+    map.flyTo([flyTo.lat, flyTo.lng], flyTo.zoom, { animate: true, duration: 1.2 })
+    clearFlyTo()
+  }, [flyTo, map, clearFlyTo])
+
+  return null
+}
+
 export function MapView() {
   const waypoints = useAppStore((s) => s.waypoints)
   const currentRoute = useAppStore((s) => s.currentRoute)
+  const userLocation = useAppStore((s) => s.userLocation)
 
   const center: [number, number] = waypoints[0]
     ? [waypoints[0].position.lat, waypoints[0].position.lng]
-    : [40.416, -3.703] // Madrid por defecto
+    : [40.416, -3.703]
 
   return (
     <MapContainer
@@ -88,6 +115,18 @@ export function MapView() {
 
       <ClickHandler />
       <AutoPan />
+      <FlyToController />
+      <POILayer />
+
+      {userLocation && (
+        <Marker
+          position={[userLocation.lat, userLocation.lng]}
+          icon={userLocationIcon}
+          zIndexOffset={500}
+        >
+          <Popup>Tu posición actual</Popup>
+        </Marker>
+      )}
 
       {waypoints.map((wp, i) => (
         <Marker

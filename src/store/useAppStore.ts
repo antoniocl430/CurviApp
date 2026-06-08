@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Waypoint, Route, RouteOptions, AppView } from '../types'
+import type { Waypoint, Route, RouteOptions, AppView, POIType } from '../types'
 
 interface AppState {
   // Navigation
@@ -11,6 +11,7 @@ interface AppState {
   waypoints: Waypoint[]
   addWaypoint: (wp: Waypoint) => void
   removeWaypoint: (id: string) => void
+  setWaypoints: (wps: Waypoint[]) => void
   clearWaypoints: () => void
 
   // Route options
@@ -27,6 +28,25 @@ interface AppState {
   savedRoutes: Route[]
   saveRoute: (route: Route) => void
   deleteRoute: (id: string) => void
+
+  // POI layer
+  activePOITypes: POIType[]
+  togglePOIType: (type: POIType) => void
+
+  // Map fly-to (used by LocateButton and other external triggers)
+  flyTo: { lat: number; lng: number; zoom: number } | null
+  requestFlyTo: (lat: number, lng: number, zoom: number) => void
+  clearFlyTo: () => void
+
+  // User GPS location marker
+  userLocation: { lat: number; lng: number } | null
+  setUserLocation: (pos: { lat: number; lng: number } | null) => void
+}
+
+const WAYPOINT_LIMITS: Record<string, number> = {
+  normal: Infinity,
+  circuit: Infinity,
+  circular: 1,
 }
 
 export const useAppStore = create<AppState>()(
@@ -36,16 +56,24 @@ export const useAppStore = create<AppState>()(
       setActiveView: (view) => set({ activeView: view }),
 
       waypoints: [],
-      addWaypoint: (wp) => set((s) => ({ waypoints: [...s.waypoints, wp] })),
+      addWaypoint: (wp) =>
+        set((s) => {
+          const mode = s.routeOptions.mode ?? 'normal'
+          const limit = WAYPOINT_LIMITS[mode] ?? Infinity
+          if (s.waypoints.length >= limit) return s
+          return { waypoints: [...s.waypoints, wp] }
+        }),
       removeWaypoint: (id) =>
-        set((s) => ({ waypoints: s.waypoints.filter((w) => w.id !== id) })),
+        set((s) => ({ waypoints: s.waypoints.filter((w) => w.id !== id), currentRoute: null })),
+      setWaypoints: (wps) => set({ waypoints: wps }),
       clearWaypoints: () => set({ waypoints: [], currentRoute: null }),
 
       routeOptions: {
-        curviness: 0.7,
+        mode: 'normal',
+        curviness: 0.5,
         avoidHighways: true,
         avoidTolls: false,
-        roundtrip: { enabled: false, distance: 100, direction: 0 },
+        roundtrip: { distance: 100, direction: 0 },
       },
       setRouteOptions: (opts) =>
         set((s) => ({ routeOptions: { ...s.routeOptions, ...opts } })),
@@ -62,6 +90,21 @@ export const useAppStore = create<AppState>()(
         })),
       deleteRoute: (id) =>
         set((s) => ({ savedRoutes: s.savedRoutes.filter((r) => r.id !== id) })),
+
+      activePOITypes: [],
+      togglePOIType: (type) =>
+        set((s) => ({
+          activePOITypes: s.activePOITypes.includes(type)
+            ? s.activePOITypes.filter((t) => t !== type)
+            : [...s.activePOITypes, type],
+        })),
+
+      flyTo: null,
+      requestFlyTo: (lat, lng, zoom) => set({ flyTo: { lat, lng, zoom } }),
+      clearFlyTo: () => set({ flyTo: null }),
+
+      userLocation: null,
+      setUserLocation: (pos) => set({ userLocation: pos }),
     }),
     {
       name: 'curviapp-storage',

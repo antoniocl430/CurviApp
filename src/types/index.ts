@@ -9,14 +9,16 @@ export interface Waypoint {
   label?: string
 }
 
+export type RouteMode = 'normal' | 'circuit' | 'circular'
+
 export interface RouteOptions {
+  mode: RouteMode
   curviness: number        // 0-1: 0 = fastest, 1 = most curvy
   avoidHighways: boolean
   avoidTolls: boolean
-  roundtrip?: {
-    enabled: boolean
-    distance: number       // km
-    direction: number      // degrees 0-360
+  roundtrip: {
+    distance: number       // km — used only in circular mode
+    direction: number      // degrees 0-360 — used only in circular mode
   }
 }
 
@@ -38,9 +40,11 @@ export interface Route {
   createdAt: string
 }
 
+export type POIType = 'gas' | 'viewpoint' | 'restaurant' | 'parking' | 'mechanic'
+
 export interface POI {
   id: string
-  type: 'gas' | 'viewpoint' | 'restaurant' | 'parking' | 'mechanic'
+  type: POIType
   position: LatLng
   name: string
   description?: string

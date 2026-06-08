@@ -14,7 +14,7 @@ export function Sidebar({ children }: { children: React.ReactNode }) {
   const setActiveView = useAppStore((s) => s.setActiveView)
 
   return (
-    <aside className="flex flex-col w-80 shrink-0 bg-[#16213e] border-r border-white/10 h-full">
+    <aside className="hidden md:flex flex-col w-80 shrink-0 bg-[#16213e] border-r border-white/10 h-full">
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
         <span className="text-2xl">🏍️</span>
