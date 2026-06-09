@@ -19,11 +19,16 @@ export function getOrsApiKey(): string {
   throw new Error('No hay clave de API configurada. Ve a Ajustes e introduce tu clave de OpenRouteService.')
 }
 
+function authHeader(key: string): string {
+  // ORS JWT tokens (start with "ey") require "Bearer " prefix; legacy keys do not
+  return key.startsWith('ey') ? `Bearer ${key}` : key
+}
+
 export async function orsPost<T>(endpoint: string, body: object): Promise<T> {
   const res = await fetch(`${ORS_BASE}${endpoint}`, {
     method: 'POST',
     headers: {
-      Authorization: getOrsApiKey(),
+      Authorization: authHeader(getOrsApiKey()),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
