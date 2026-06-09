@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import { useAppStore } from '../../store/useAppStore'
 import { nanoid } from '../../utils/nanoid'
-import type { LatLng } from '../../types'
 import { POILayer } from './POILayer'
 import 'leaflet/dist/leaflet.css'
 

@@ -390,16 +390,6 @@ async function tryViaFeature(
   }
 }
 
-/** Tries a single via-point route; returns null if the point is not routable. */
-async function tryViaRoute(
-  start: LatLng,
-  via: LatLng,
-  opts: RouteOptions,
-  name: string
-): Promise<Route | null> {
-  const feat = await tryViaFeature(start, via, opts)
-  return feat ? featureToRoute(feat, [start], opts, name) : null
-}
 
 /**
  * Executes an ORS native round_trip request for the given seed.

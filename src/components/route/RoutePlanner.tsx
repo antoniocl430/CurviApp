@@ -33,7 +33,7 @@ const ROUNDTRIP_DIRECTIONS = [
 ] as const
 
 // Labels for waypoints per mode
-function waypointLabel(mode: RouteMode, index: number, total: number, fallback?: string): string {
+function waypointLabel(mode: RouteMode, index: number, _total: number, fallback?: string): string {
   if (mode === 'circular') return 'Origen'
   if (index === 0) return 'Origen'
   return fallback ?? `Punto ${index + 1}`

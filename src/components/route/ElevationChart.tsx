@@ -24,7 +24,7 @@ export function ElevationChart({ points }: Props) {
           <Tooltip
             contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 11 }}
             labelFormatter={(v) => `${v} km`}
-            formatter={(v: number) => [`${Math.round(v)} m`, 'Elevación']}
+            formatter={(v: unknown) => [`${Math.round(v as number)} m`, 'Elevación']}
           />
           <Area
             type="monotone"
