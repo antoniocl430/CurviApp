@@ -207,24 +207,23 @@ async function orsRequest(
   opts: RouteOptions
 ): Promise<OrsRouteResponse> {
   const coordinates = waypoints.map((w) => [w.lng, w.lat])
-  const body = {
+  const avoidOpts = buildAvoidOptions(opts)
+  const body: Record<string, unknown> = {
     coordinates,
-    format: 'geojson',
     elevation: true,
-    options: {
-      ...buildAvoidOptions(opts),
-    },
-    extra_info: ['waytype'],
-    ...buildAlternativeOptions(opts.curviness, coordinates.length, opts.avoidHighways),
+    ...(Object.keys(avoidOpts).length ? { options: avoidOpts } : {}),
   }
+
+  const altOpts = buildAlternativeOptions(opts.curviness, coordinates.length, opts.avoidHighways)
+  if (Object.keys(altOpts).length) Object.assign(body, altOpts)
+
   try {
     return await orsPost<OrsRouteResponse>('/v2/directions/driving-car/geojson', body)
   } catch (err) {
-    const isLimitError =
-      err instanceof Error && err.message.includes('exceed the server configuration limits')
-    if (isLimitError) {
+    // Retry without alternatives if quota/limit error
+    if (err instanceof Error && (err.message.includes('exceed') || err.message.includes('limit'))) {
       const fallback = { ...body }
-      delete (fallback as Record<string, unknown>).alternative_routes
+      delete fallback.alternative_routes
       return orsPost<OrsRouteResponse>('/v2/directions/driving-car/geojson', fallback)
     }
     throw err
