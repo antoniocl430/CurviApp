@@ -38,8 +38,9 @@ export async function orsPost<T>(endpoint: string, body: object): Promise<T> {
     body: JSON.stringify(body),
   })
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error?.message ?? `ORS error ${res.status}`)
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string; code?: number } }
+    const msg = err?.error?.message ?? `ORS error ${res.status}`
+    throw new Error(`[${res.status}] ${msg}`)
   }
   return res.json() as Promise<T>
 }

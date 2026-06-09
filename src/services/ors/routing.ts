@@ -209,14 +209,12 @@ async function orsRequest(
   const coordinates = waypoints.map((w) => [w.lng, w.lat])
   const body = {
     coordinates,
-    profile: 'driving-car',
     format: 'geojson',
     elevation: true,
     options: {
       ...buildAvoidOptions(opts),
-      profile_params: { weightings: curvinessToWeighting(opts.curviness, opts.avoidHighways) },
     },
-    extra_info: ['waytype', 'surface'],
+    extra_info: ['waytype'],
     ...buildAlternativeOptions(opts.curviness, coordinates.length, opts.avoidHighways),
   }
   try {
@@ -224,7 +222,7 @@ async function orsRequest(
   } catch (err) {
     const isLimitError =
       err instanceof Error && err.message.includes('exceed the server configuration limits')
-    if (isLimitError && opts.curviness > 0) {
+    if (isLimitError) {
       const fallback = { ...body }
       delete (fallback as Record<string, unknown>).alternative_routes
       return orsPost<OrsRouteResponse>('/v2/directions/driving-car/geojson', fallback)
