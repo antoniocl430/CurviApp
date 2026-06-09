@@ -20,8 +20,10 @@ export function getOrsApiKey(): string {
 }
 
 function authHeader(key: string): string {
-  // ORS JWT tokens (start with "ey") require "Bearer " prefix; legacy keys do not
-  return key.startsWith('ey') ? `Bearer ${key}` : key
+  // Real JWTs have three dot-separated parts (header.payload.signature).
+  // ORS base64 keys also start with "ey" but have no dots — send them as-is.
+  const isJwt = key.startsWith('ey') && (key.match(/\./g) ?? []).length >= 2
+  return isJwt ? `Bearer ${key}` : key
 }
 
 export async function orsPost<T>(endpoint: string, body: object): Promise<T> {
