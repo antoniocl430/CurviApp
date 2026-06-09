@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { MapPin, Trash2, Navigation, RotateCcw, Download, ExternalLink, RefreshCw } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../../store/useAppStore'
-import { calculateRoute, calculateRoundtrip } from '../../services/ors/routing'
+import { calculateRouteOsrm, calculateRoundtripOsrm } from '../../services/osrm/routing'
 import { downloadGpx } from '../../services/gpx/export'
 import { openInGoogleMaps } from '../../utils/googleMaps'
 import { Button } from '../ui/Button'
@@ -95,14 +95,14 @@ export function RoutePlanner() {
     setRouteOptions({ roundtrip: { ...roundtrip, ...partial } })
   }
 
-  async function runCalculate(overrideSeed?: number) {
+  async function runCalculate(_overrideSeed?: number) {
     if (!canCalculate) return
     setIsCalculating(true)
     try {
       const route =
         mode === 'circular'
-          ? await calculateRoundtrip(waypoints[0].position, routeOptions, overrideSeed ?? seed)
-          : await calculateRoute(waypoints.map((w) => w.position), routeOptions)
+          ? await calculateRoundtripOsrm(waypoints[0].position, routeOptions)
+          : await calculateRouteOsrm(waypoints.map((w) => w.position), routeOptions)
       setCurrentRoute(route)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
