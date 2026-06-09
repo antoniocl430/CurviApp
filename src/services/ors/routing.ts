@@ -1,4 +1,4 @@
-import { orsPost } from './client'
+import { orsPost, orsGet } from './client'
 import type { LatLng, RouteOptions, ElevationPoint, Route } from '../../types'
 import { nanoid } from '../../utils/nanoid'
 
@@ -111,20 +111,6 @@ function curvinessToWeighting(curviness: number, avoidHighways = false) {
   return { green: parseFloat(greenFactor.toFixed(2)) }
 }
 
-function buildAlternativeOptions(curviness: number, waypointCount: number, avoidHighways = false) {
-  // ORS rejects alternative_routes with >2 waypoints
-  if (waypointCount > 2) return {}
-  // Request alternatives whenever avoiding highways (gives more route choices)
-  // and whenever curviness > 0 (so we can pick the curviest one)
-  if (curviness === 0 && !avoidHighways) return {}
-  return {
-    alternative_routes: {
-      target_count: 3,
-      weight_factor: curviness === 1 ? 1.8 : 1.4,
-      share_factor:  curviness === 1 ? 0.5 : 0.6,
-    },
-  }
-}
 
 function pickByCurvature(
   features: OrsRouteResponse['features'],
@@ -202,10 +188,24 @@ function featureToRoute(
   }
 }
 
+// Simple GET request — works on ORS free tier (same as API Playground)
+async function orsRequestGet(start: LatLng, end: LatLng): Promise<OrsRouteResponse> {
+  return orsGet<OrsRouteResponse>('/v2/directions/driving-car', {
+    start: `${start.lng},${start.lat}`,
+    end: `${end.lng},${end.lat}`,
+  })
+}
+
 async function orsRequest(
   waypoints: LatLng[],
   opts: RouteOptions
 ): Promise<OrsRouteResponse> {
+  // For simple 2-point routes, use GET (confirmed working in ORS Playground)
+  if (waypoints.length === 2) {
+    return orsRequestGet(waypoints[0], waypoints[1])
+  }
+
+  // For 3+ waypoints, use POST
   const coordinates = waypoints.map((w) => [w.lng, w.lat])
   const avoidOpts = buildAvoidOptions(opts)
   const body: Record<string, unknown> = {
@@ -213,21 +213,7 @@ async function orsRequest(
     elevation: true,
     ...(Object.keys(avoidOpts).length ? { options: avoidOpts } : {}),
   }
-
-  const altOpts = buildAlternativeOptions(opts.curviness, coordinates.length, opts.avoidHighways)
-  if (Object.keys(altOpts).length) Object.assign(body, altOpts)
-
-  try {
-    return await orsPost<OrsRouteResponse>('/v2/directions/driving-car/geojson', body)
-  } catch (err) {
-    // Retry without alternatives if quota/limit error
-    if (err instanceof Error && (err.message.includes('exceed') || err.message.includes('limit'))) {
-      const fallback = { ...body }
-      delete fallback.alternative_routes
-      return orsPost<OrsRouteResponse>('/v2/directions/driving-car/geojson', fallback)
-    }
-    throw err
-  }
+  return orsPost<OrsRouteResponse>('/v2/directions/driving-car/geojson', body)
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────────
