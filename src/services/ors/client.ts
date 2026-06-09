@@ -27,10 +27,12 @@ function authHeader(key: string): string {
 }
 
 export async function orsPost<T>(endpoint: string, body: object): Promise<T> {
-  const res = await fetch(`${ORS_BASE}${endpoint}`, {
+  const key = getOrsApiKey()
+  const url = `${ORS_BASE}${endpoint}?api_key=${encodeURIComponent(key)}`
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: authHeader(getOrsApiKey()),
+      Authorization: authHeader(key),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
