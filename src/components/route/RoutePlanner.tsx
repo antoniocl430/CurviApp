@@ -105,7 +105,13 @@ export function RoutePlanner() {
           : await calculateRoute(waypoints.map((w) => w.position), routeOptions)
       setCurrentRoute(route)
     } catch (err) {
-      alert(`Error al calcular ruta: ${err instanceof Error ? err.message : 'Error desconocido'}`)
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      const isNoKey = msg.includes('No hay clave') || msg.includes('VITE_ORS_API_KEY')
+      if (isNoKey) {
+        useAppStore.getState().setActiveView('settings')
+      } else {
+        alert(`Error al calcular ruta: ${msg}`)
+      }
     } finally {
       setIsCalculating(false)
     }

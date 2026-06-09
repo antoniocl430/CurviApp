@@ -1,9 +1,22 @@
 const ORS_BASE = 'https://api.openrouteservice.org'
 
 export function getOrsApiKey(): string {
-  const key = import.meta.env.VITE_ORS_API_KEY
-  if (!key) throw new Error('VITE_ORS_API_KEY is not set in .env')
-  return key
+  // Priority: build-time env var → user-saved key in localStorage
+  const envKey = import.meta.env.VITE_ORS_API_KEY as string | undefined
+  if (envKey) return envKey
+
+  try {
+    const stored = localStorage.getItem('curviapp-storage')
+    if (stored) {
+      const parsed = JSON.parse(stored) as { state?: { orsApiKey?: string } }
+      const key = parsed?.state?.orsApiKey
+      if (key) return key
+    }
+  } catch {
+    // ignore
+  }
+
+  throw new Error('No hay clave de API configurada. Ve a Ajustes e introduce tu clave de OpenRouteService.')
 }
 
 export async function orsPost<T>(endpoint: string, body: object): Promise<T> {

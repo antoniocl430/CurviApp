@@ -7,6 +7,10 @@ interface AppState {
   activeView: AppView
   setActiveView: (view: AppView) => void
 
+  // API Key
+  orsApiKey: string
+  setOrsApiKey: (key: string) => void
+
   // Route planning
   waypoints: Waypoint[]
   addWaypoint: (wp: Waypoint) => void
@@ -54,6 +58,9 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       activeView: 'planner',
       setActiveView: (view) => set({ activeView: view }),
+
+      orsApiKey: '',
+      setOrsApiKey: (key) => set({ orsApiKey: key }),
 
       waypoints: [],
       addWaypoint: (wp) =>
@@ -108,7 +115,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'curviapp-storage',
-      partialize: (s) => ({ savedRoutes: s.savedRoutes, routeOptions: s.routeOptions }),
+      partialize: (s) => ({ savedRoutes: s.savedRoutes, routeOptions: s.routeOptions, orsApiKey: s.orsApiKey }),
     }
   )
 )
