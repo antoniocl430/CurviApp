@@ -172,7 +172,7 @@ function decodePolyline(encoded: string): LatLng[] {
 
 // ─── Routing engines ──────────────────────────────────────────────────────────
 
-interface RawRoute { geometry: LatLng[]; distanceKm: number; durationMin: number }
+interface RawRoute { geometry: LatLng[]; distanceKm: number; durationMin: number; elevations: number[] }
 
 async function callValhalla(waypoints: LatLng[], avoidHighways: boolean, avoidTolls: boolean): Promise<RawRoute> {
   const locations = waypoints.map((w, i) => ({
@@ -190,6 +190,7 @@ async function callValhalla(waypoints: LatLng[], avoidHighways: boolean, avoidTo
       },
     },
     directions_options: { units: 'kilometers' },
+    elevation_interval: 100,
   }
   const res = await fetch(`${VALHALLA_BASE}/route`, {
     method: 'POST',
@@ -200,12 +201,14 @@ async function callValhalla(waypoints: LatLng[], avoidHighways: boolean, avoidTo
     const err = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(err?.error ?? `Valhalla ${res.status}`)
   }
-  const data = await res.json() as { trip: { legs: Array<{ shape: string }>; summary: { length: number; time: number } } }
+  const data = await res.json() as { trip: { legs: Array<{ shape: string; elevation?: number[] }>; summary: { length: number; time: number } } }
   const geometry = data.trip.legs.flatMap((l) => decodePolyline(l.shape))
+  const elevations = data.trip.legs.flatMap((l) => l.elevation ?? [])
   return {
     geometry,
     distanceKm: data.trip.summary.length,
     durationMin: data.trip.summary.time / 60,
+    elevations,
   }
 }
 
@@ -221,6 +224,7 @@ async function callOsrm(waypoints: LatLng[], avoidHighways: boolean): Promise<Ra
     geometry: r.geometry.coordinates.map(([lng, lat]) => ({ lat, lng })),
     distanceKm: r.distance / 1000,
     durationMin: r.duration / 60,
+    elevations: [],
   }
 }
 
@@ -265,9 +269,26 @@ async function routeAvoidingHighways(originalWps: LatLng[], opts: RouteOptions):
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+function buildElevationProfile(elevations: number[], distanceKm: number): ElevationPoint[] {
+  if (elevations.length < 2) return []
+  const step = distanceKm / (elevations.length - 1)
+  return elevations.map((ele, i) => ({
+    distance: parseFloat((i * step).toFixed(2)),
+    elevation: ele,
+  }))
+}
+
+function calcElevationGain(points: ElevationPoint[]): number {
+  return Math.round(points.reduce((gain, p, i) => {
+    if (i === 0) return gain
+    const diff = p.elevation - points[i - 1].elevation
+    return gain + (diff > 0 ? diff : 0)
+  }, 0))
+}
+
 async function buildRoute(waypoints: LatLng[], opts: RouteOptions, name: string): Promise<Route> {
-  const { geometry, distanceKm, durationMin } = await routeAvoidingHighways(waypoints, opts)
-  const elevationProfile: ElevationPoint[] = []
+  const { geometry, distanceKm, durationMin, elevations } = await routeAvoidingHighways(waypoints, opts)
+  const elevationProfile = buildElevationProfile(elevations, distanceKm)
   return {
     id: nanoid(),
     name,
@@ -276,7 +297,7 @@ async function buildRoute(waypoints: LatLng[], opts: RouteOptions, name: string)
     distanceKm: parseFloat(distanceKm.toFixed(1)),
     durationMin: parseFloat(durationMin.toFixed(0)),
     elevationProfile,
-    elevationGainM: 0,
+    elevationGainM: calcElevationGain(elevationProfile),
     options: opts,
     createdAt: new Date().toISOString(),
   }

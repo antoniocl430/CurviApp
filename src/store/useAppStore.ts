@@ -37,6 +37,10 @@ interface AppState {
   activePOITypes: POIType[]
   togglePOIType: (type: POIType) => void
 
+  // Current map zoom level (updated by ZoomTracker inside MapView)
+  mapZoom: number
+  setMapZoom: (zoom: number) => void
+
   // Map fly-to (used by LocateButton and other external triggers)
   flyTo: { lat: number; lng: number; zoom: number } | null
   requestFlyTo: (lat: number, lng: number, zoom: number) => void
@@ -105,6 +109,9 @@ export const useAppStore = create<AppState>()(
             ? s.activePOITypes.filter((t) => t !== type)
             : [...s.activePOITypes, type],
         })),
+
+      mapZoom: 7,
+      setMapZoom: (zoom) => set({ mapZoom: zoom }),
 
       flyTo: null,
       requestFlyTo: (lat, lng, zoom) => set({ flyTo: { lat, lng, zoom } }),

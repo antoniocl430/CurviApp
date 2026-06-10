@@ -77,6 +77,14 @@ function AutoPan() {
   return null
 }
 
+function ZoomTracker() {
+  const setMapZoom = useAppStore((s) => s.setMapZoom)
+  useMapEvents({
+    zoomend(e) { setMapZoom(e.target.getZoom()) },
+  })
+  return null
+}
+
 function FlyToController() {
   const map = useMap()
   const flyTo = useAppStore((s) => s.flyTo)
@@ -115,6 +123,7 @@ export function MapView() {
       <ClickHandler />
       <AutoPan />
       <FlyToController />
+      <ZoomTracker />
       <POILayer />
 
       {userLocation && (

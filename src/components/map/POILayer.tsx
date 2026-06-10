@@ -5,7 +5,7 @@ import { useAppStore } from '../../store/useAppStore'
 import { fetchPOIs } from '../../services/overpass/pois'
 import type { POI, POIType } from '../../types'
 
-const MIN_ZOOM = 11
+export const MIN_ZOOM = 11
 const DEBOUNCE_MS = 800
 
 export const POI_META: Record<POIType, { emoji: string; color: string; label: string }> = {

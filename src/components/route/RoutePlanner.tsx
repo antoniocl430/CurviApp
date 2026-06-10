@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, Trash2, Navigation, RotateCcw, Download, ExternalLink, RefreshCw } from 'lucide-react'
+import { MapPin, Trash2, Navigation, RotateCcw, Download, ExternalLink, RefreshCw, Check } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../../store/useAppStore'
 import { calculateRouteOsrm, calculateRoundtripOsrm } from '../../services/osrm/routing'
@@ -73,6 +73,7 @@ export function RoutePlanner() {
   const saveRoute     = useAppStore((s) => s.saveRoute)
 
   const [seed, setSeed] = useState(0)
+  const [justSaved, setJustSaved] = useState(false)
 
   const mode     = routeOptions.mode ?? 'normal'
   const roundtrip = routeOptions.roundtrip
@@ -319,8 +320,17 @@ export function RoutePlanner() {
           <ElevationChart points={currentRoute.elevationProfile} />
 
           <div className="flex gap-2">
-            <Button variant="secondary" size="sm" className="flex-1" onClick={() => saveRoute(currentRoute)}>
-              Guardar ruta
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1"
+              onClick={() => {
+                saveRoute(currentRoute)
+                setJustSaved(true)
+                setTimeout(() => setJustSaved(false), 2000)
+              }}
+            >
+              {justSaved ? <><Check size={13} /> ¡Guardada!</> : 'Guardar ruta'}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => downloadGpx(currentRoute)}>
               <Download size={14} /> GPX

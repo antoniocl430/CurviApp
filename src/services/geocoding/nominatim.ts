@@ -30,10 +30,17 @@ export async function searchPlace(query: string): Promise<GeocodingResult[]> {
 
   const data: NominatimResult[] = await res.json()
 
-  return data.map((r) => ({
-    label: r.display_name,
-    shortLabel: r.display_name.split(',')[0].trim(),
-    lat: parseFloat(r.lat),
-    lng: parseFloat(r.lon),
-  }))
+  const seen = new Set<string>()
+  return data
+    .filter((r) => {
+      if (seen.has(r.display_name)) return false
+      seen.add(r.display_name)
+      return true
+    })
+    .map((r) => ({
+      label: r.display_name,
+      shortLabel: r.display_name.split(',')[0].trim(),
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lon),
+    }))
 }

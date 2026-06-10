@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 import { useAppStore } from '../../store/useAppStore'
-import { POI_META } from './POILayer'
+import { POI_META, MIN_ZOOM } from './POILayer'
 import type { POIType } from '../../types'
 
 const POI_TYPES: POIType[] = ['gas', 'viewpoint', 'restaurant', 'mechanic', 'parking']
@@ -8,9 +8,12 @@ const POI_TYPES: POIType[] = ['gas', 'viewpoint', 'restaurant', 'mechanic', 'par
 export function POIControls() {
   const activePOITypes = useAppStore((s) => s.activePOITypes)
   const togglePOIType  = useAppStore((s) => s.togglePOIType)
+  const mapZoom        = useAppStore((s) => s.mapZoom)
+
+  const showZoomHint = activePOITypes.length > 0 && mapZoom < MIN_ZOOM
 
   return (
-    <div className="absolute top-4 right-4 z-10 flex flex-col gap-1.5">
+    <div className="absolute top-4 right-4 z-10 flex flex-col gap-1.5 items-end">
       {POI_TYPES.map((type) => {
         const { emoji, color, label } = POI_META[type]
         const active = activePOITypes.includes(type)
@@ -32,6 +35,11 @@ export function POIControls() {
           </button>
         )
       })}
+      {showZoomHint && (
+        <div className="bg-[#1a1a2e]/90 text-white/60 text-[10px] rounded-lg px-2 py-1 text-center leading-tight max-w-[72px] shadow-lg">
+          Acerca el mapa para ver POIs
+        </div>
+      )}
     </div>
   )
 }

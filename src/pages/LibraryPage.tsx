@@ -63,7 +63,7 @@ export function LibraryPage() {
 
       {/* Desktop: main area placeholder */}
       <main className="hidden md:flex flex-1 items-center justify-center bg-[#0f3460]/30">
-        <p className="text-white/20 text-sm">Selecciona una ruta para verla en el mapa</p>
+        <p className="text-white/20 text-sm">Selecciona una ruta para cargarla en el planificador</p>
       </main>
 
       {/* Mobile: full-width scrollable list */}
